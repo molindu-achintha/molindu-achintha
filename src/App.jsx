@@ -1,9 +1,9 @@
-import Terminal from './components/Terminal';
+import ChatInterface from './components/ChatInterface';
 
 function App() {
   return (
     <div className="w-full h-full">
-      <Terminal />
+      <ChatInterface />
     </div>
   );
 }
