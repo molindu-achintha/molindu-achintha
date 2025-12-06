@@ -1,9 +1,12 @@
 import ChatInterface from './components/ChatInterface';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   return (
     <div className="w-full h-full">
-      <ChatInterface />
+      <ErrorBoundary>
+        <ChatInterface />
+      </ErrorBoundary>
     </div>
   );
 }

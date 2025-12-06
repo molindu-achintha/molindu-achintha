@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import MessageBubble from './Chat/MessageBubble';
 import ChatInput from './Chat/ChatInput';
 import { sendMessageToGemini } from '../services/gemini';
