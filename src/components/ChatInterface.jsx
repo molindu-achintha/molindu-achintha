@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import MessageBubble from './Chat/MessageBubble';
 import ChatInput from './Chat/ChatInput';
+import SuggestionCards from './Chat/SuggestionCards';
 import { sendMessageToGemini } from '../services/gemini';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -63,6 +64,9 @@ const ChatInterface = () => {
                     {messages.map((msg, idx) => (
                         <MessageBubble key={idx} message={msg} />
                     ))}
+
+                    {messages.length === 1 && !isTyping && <SuggestionCards onSelect={handleSend} />}
+
                     {isTyping && (
                         <motion.div
                             initial={{ opacity: 0 }}

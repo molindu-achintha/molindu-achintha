@@ -25,8 +25,17 @@ export const sendMessageToGemini = async (message, history = []) => {
         throw new Error("Gemini Model not initialized. Is the API Key valid?");
     }
     try {
+        // Filter history to ensure it starts with a user message if there's history
+        // and remove any internal/system messages that might not be valid API roles
+        const apiHistory = history.filter(msg => msg.role === 'user' || msg.role === 'model');
+
+        // If the first message is model, remove it (Gemini requirement)
+        if (apiHistory.length > 0 && apiHistory[0].role === 'model') {
+            apiHistory.shift();
+        }
+
         const chat = model.startChat({
-            history: history.map(msg => ({
+            history: apiHistory.map(msg => ({
                 role: msg.role === 'user' ? 'user' : 'model',
                 parts: [{ text: msg.content }],
             })),
@@ -39,7 +48,12 @@ export const sendMessageToGemini = async (message, history = []) => {
         const result = await chat.sendMessageStream(message);
         return result.stream;
     } catch (error) {
-        console.error("Gemini API Error:", error);
+        console.error("Gemini API Error Details:", {
+            message: error.message,
+            status: error.status,
+            statusText: error.statusText,
+            stack: error.stack
+        });
         throw error;
     }
 };
