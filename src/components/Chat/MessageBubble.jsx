@@ -147,18 +147,28 @@ const MessageBubble = ({ message, onSuggestionClick }) => {
                                     </ReactMarkdown>
                                 </div>
 
-                                {/* Suggestions */}
+                                {/* Suggestions - Premium Card Design */}
                                 {message.suggestions && message.suggestions.length > 0 && (
-                                    <div className="mt-6 flex flex-wrap gap-2">
-                                        {message.suggestions.map((suggestion, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
-                                                className="px-4 py-2 bg-[#2d2d2d]/80 hover:bg-violet-600/20 hover:text-violet-300 hover:border-violet-500/30 border border-gray-700/50 rounded-xl text-xs text-gray-400 transition-all text-left"
-                                            >
-                                                {suggestion}
-                                            </button>
-                                        ))}
+                                    <div className="mt-8 pt-6 border-t border-gray-700/30">
+                                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
+                                            Continue the conversation
+                                        </p>
+                                        <div className="grid gap-2">
+                                            {message.suggestions.map((suggestion, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
+                                                    className="group flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#1a1a2e]/80 to-[#16213e]/80 hover:from-violet-600/20 hover:to-indigo-600/20 border border-gray-700/40 hover:border-violet-500/40 rounded-xl text-sm text-gray-300 hover:text-white transition-all duration-300 text-left"
+                                                >
+                                                    <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-violet-500/20 group-hover:bg-violet-500/30 flex items-center justify-center text-violet-400 text-xs font-medium transition-colors">
+                                                        {idx + 1}
+                                                    </span>
+                                                    <span className="flex-1">{suggestion}</span>
+                                                    <span className="text-gray-600 group-hover:text-violet-400 transition-colors">→</span>
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </>
