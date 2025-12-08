@@ -1,16 +1,16 @@
 import { motion } from 'framer-motion';
-import { Code, User, FileText, Send } from 'lucide-react';
+import { Code, User, Briefcase, Mail } from 'lucide-react';
 
 const suggestions = [
-    { icon: <Code size={20} />, text: "Show me your projects", prompt: "What projects have you worked on?" },
-    { icon: <User size={20} />, text: "Tell me about yourself", prompt: "Who is Molindu Achintha?" },
-    { icon: <FileText size={20} />, text: "What are your skills?", prompt: "List your technical skills." },
-    { icon: <Send size={20} />, text: "How can I contact you?", prompt: "What are your contact details?" },
+    { icon: <Code size={18} />, text: "View Projects", prompt: "What projects have you worked on?", color: "from-blue-500 to-cyan-500" },
+    { icon: <User size={18} />, text: "About Me", prompt: "Tell me about yourself", color: "from-violet-500 to-purple-500" },
+    { icon: <Briefcase size={18} />, text: "Skills & Tech", prompt: "What are your technical skills?", color: "from-amber-500 to-orange-500" },
+    { icon: <Mail size={18} />, text: "Contact Info", prompt: "How can I contact you?", color: "from-emerald-500 to-teal-500" },
 ];
 
 const SuggestionCards = ({ onSelect }) => {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 px-4">
+        <div className="grid grid-cols-2 gap-3 mt-6">
             {suggestions.map((item, index) => (
                 <motion.button
                     key={index}
@@ -18,12 +18,12 @@ const SuggestionCards = ({ onSelect }) => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                     onClick={() => onSelect(item.prompt)}
-                    className="flex items-center gap-3 p-4 bg-slate-900 border border-slate-700 rounded-xl hover:bg-slate-800 hover:border-sky-500/50 transition-all text-left group"
+                    className="group flex items-center gap-3 p-4 bg-[#1a1a2e]/50 border border-gray-800/50 rounded-xl hover:bg-[#1a1a2e] hover:border-gray-700 transition-all text-left"
                 >
-                    <div className="p-2 bg-slate-800 rounded-lg text-sky-400 group-hover:text-sky-300 group-hover:bg-slate-700 transition-colors">
+                    <div className={`p-2 rounded-lg bg-gradient-to-br ${item.color} text-white shadow-lg`}>
                         {item.icon}
                     </div>
-                    <span className="text-slate-300 text-sm font-medium group-hover:text-slate-100">
+                    <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
                         {item.text}
                     </span>
                 </motion.button>

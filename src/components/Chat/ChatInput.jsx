@@ -1,42 +1,57 @@
-import { useState } from 'react';
-import { Send, Sparkles } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Send, ArrowUp } from 'lucide-react';
 
 const ChatInput = ({ onSend, disabled }) => {
     const [input, setInput] = useState('');
+    const textareaRef = useRef(null);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (input.trim() && !disabled) {
-            onSend(input);
+            onSend(input.trim());
             setInput('');
         }
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit(e);
+        }
+    };
+
+    // Auto-resize textarea
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px';
+        }
+    }, [input]);
+
     return (
-        <form onSubmit={handleSubmit} className="relative w-full max-w-4xl mx-auto p-4">
-            <div className="relative group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-teal-400 to-sky-500 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-                <div className="relative flex items-center bg-slate-900 rounded-lg border border-slate-700 shadow-xl overflow-hidden">
-                    <div className="pl-4">
-                        <Sparkles size={20} className="text-sky-400 animate-pulse" />
-                    </div>
-                    <input
-                        type="text"
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Ask anything (e.g., 'Show me your RAG project')..."
-                        className="w-full bg-transparent text-slate-100 px-4 py-4 focus:outline-none placeholder-slate-500"
-                        disabled={disabled}
-                        autoFocus
-                    />
-                    <button
-                        type="submit"
-                        disabled={disabled || !input.trim()}
-                        className="p-3 mr-1 text-slate-400 hover:text-white disabled:opacity-50 transition-colors"
-                    >
-                        <Send size={20} />
-                    </button>
-                </div>
+        <form onSubmit={handleSubmit} className="relative">
+            <div className="relative flex items-end gap-3 p-3 bg-[#1e1e1e] rounded-lg border border-gray-700/50 focus-within:border-violet-500/50 focus-within:ring-1 focus-within:ring-violet-500/20 transition-all">
+                <div className="pb-2 text-violet-500 font-mono select-none">{'>'}</div>
+                <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type a command..."
+                    disabled={disabled}
+                    rows={1}
+                    className="flex-1 bg-transparent text-gray-200 placeholder-gray-600 resize-none outline-none py-1 max-h-[200px] font-mono text-sm leading-relaxed"
+                />
+                <button
+                    type="submit"
+                    disabled={disabled || !input.trim()}
+                    className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all ${input.trim() && !disabled
+                        ? 'bg-violet-500 hover:bg-violet-400 text-white shadow-lg shadow-violet-500/25'
+                        : 'bg-gray-700/50 text-gray-500 cursor-not-allowed'
+                        }`}
+                >
+                    <ArrowUp size={18} />
+                </button>
             </div>
         </form>
     );

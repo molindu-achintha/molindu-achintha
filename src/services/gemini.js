@@ -1,59 +1,33 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { systemPrompt } from "../data/systemPrompt";
+const API_URL = "http://localhost:8000";
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-let genAI = null;
-let model = null;
-
-try {
-    if (apiKey) {
-        genAI = new GoogleGenerativeAI(apiKey);
-        model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash",
-            systemInstruction: systemPrompt
-        });
-    } else {
-        console.warn("Gemini API Key is missing. Check .env file.");
-    }
-} catch (e) {
-    console.error("Failed to initialize Gemini:", e);
-}
-
-export const sendMessageToGemini = async (message, history = []) => {
-    if (!model) {
-        throw new Error("Gemini Model not initialized. Is the API Key valid?");
-    }
+/**
+ * Sends a message to the RAG backend (Groq).
+ * @param {string} message - User's message
+ * @param {Array} history - Chat history (unused in this backend implementation but kept for compatibility)
+ * @returns {Promise<string>} - The AI response
+ */
+export const sendMessageToBackend = async (message, history = []) => {
     try {
-        // Filter history to ensure it starts with a user message if there's history
-        // and remove any internal/system messages that might not be valid API roles
-        const apiHistory = history.filter(msg => msg.role === 'user' || msg.role === 'model');
+        const response = await fetch(`${API_URL}/chat`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                message: message,
+                model_provider: "groq" // Backend defaults to groq anyway
+            }),
+        });
 
-        // If the first message is model, remove it (Gemini requirement)
-        if (apiHistory.length > 0 && apiHistory[0].role === 'model') {
-            apiHistory.shift();
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.statusText}`);
         }
 
-        const chat = model.startChat({
-            history: apiHistory.map(msg => ({
-                role: msg.role === 'user' ? 'user' : 'model',
-                parts: [{ text: msg.content }],
-            })),
-            generationConfig: {
-                maxOutputTokens: 1000,
-                temperature: 0.7,
-            },
-        });
+        const data = await response.json();
+        return data.response;
 
-        const result = await chat.sendMessageStream(message);
-        return result.stream;
     } catch (error) {
-        console.error("Gemini API Error Details:", {
-            message: error.message,
-            status: error.status,
-            statusText: error.statusText,
-            stack: error.stack
-        });
+        console.error("Error sending message:", error);
         throw error;
     }
 };

@@ -2,12 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import MessageBubble from './Chat/MessageBubble';
 import ChatInput from './Chat/ChatInput';
 import SuggestionCards from './Chat/SuggestionCards';
-import { sendMessageToGemini } from '../services/gemini';
-import { motion, AnimatePresence } from 'framer-motion';
+import { sendMessageToBackend } from '../services/gemini';
+import { motion } from 'framer-motion';
+import { Sparkles, Menu, Bot } from 'lucide-react';
 
 const ChatInterface = () => {
+    // Provider state removed as we now only use Groq
     const [messages, setMessages] = useState([
-        { role: 'model', content: "Hi! I'm Molindu's AI Assistant. Ask me anything about his projects, skills, or experience!" }
+        { role: 'model', content: "👋 Hi! I'm **Molindu's AI Assistant**. I can tell you about his projects, technical skills, and experience.\n\nTry asking: \"What projects have you worked on?\"" }
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
@@ -26,69 +28,85 @@ const ChatInterface = () => {
         setIsTyping(true);
 
         try {
-            const stream = await sendMessageToGemini(text, messages);
+            // Using generic backend call (Groq)
+            const responseText = await sendMessageToBackend(text, messages);
 
-            let fullResponse = "";
-            setMessages(prev => [...prev, { role: 'model', content: "" }]);
+            setMessages(prev => [...prev, { role: 'model', content: responseText }]);
 
-            for await (const chunk of stream) {
-                const chunkText = chunk.text();
-                fullResponse += chunkText;
-
-                setMessages(prev => {
-                    const newHistory = [...prev];
-                    newHistory[newHistory.length - 1].content = fullResponse;
-                    return newHistory;
-                });
-            }
         } catch (error) {
-            setMessages(prev => [...prev, { role: 'model', content: "Sorry, I encountered an error. Please check your API Key or try again." }]);
+            console.error("Chat Error:", error);
+            setMessages(prev => [...prev, { role: 'model', content: "⚠️ Sorry, I encountered an error. Please ensure the backend is running." }]);
         } finally {
             setIsTyping(false);
         }
     };
 
     return (
-        <div className="flex flex-col h-screen bg-slate-950 text-slate-100 font-sans selection:bg-sky-500/30">
-            {/* Header */}
-            <div className="border-b border-slate-800 p-4 flex justify-between items-center bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
-                <h1 className="font-bold text-xl tracking-tight">Molindu<span className="text-sky-400">.ai</span></h1>
-                <div className="text-xs text-slate-400 px-2 py-1 bg-slate-800 rounded-full border border-slate-700">
-                    Powered by Gemini 2.5 Flash
+        <div className="flex flex-col h-screen bg-transparent text-gray-100">
+            {/* Header - Clean and minimal */}
+            <header className="flex-shrink-0 border-b border-gray-800/30 bg-transparent sticky top-0 z-50">
+                <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
+                            <Sparkles size={18} className="text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-lg font-semibold tracking-tight">
+                                Molindu<span className="text-violet-400">.ai</span>
+                            </h1>
+                            <p className="text-xs text-gray-500">Portfolio Assistant (Groq)</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </header>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
-                <div className="max-w-4xl mx-auto">
+            <main className="flex-1 overflow-y-auto">
+                <div className="min-h-full">
                     {messages.map((msg, idx) => (
                         <MessageBubble key={idx} message={msg} />
                     ))}
 
-                    {messages.length === 1 && !isTyping && <SuggestionCards onSelect={handleSend} />}
+                    {messages.length === 1 && !isTyping && (
+                        <div className="max-w-3xl mx-auto px-4 pb-8">
+                            <SuggestionCards onSelect={handleSend} />
+                        </div>
+                    )}
 
                     {isTyping && (
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="flex gap-2 p-4 text-slate-500 text-sm"
+                            className="w-full py-6 bg-transparent"
                         >
-                            <span className="animate-bounce">●</span>
-                            <span className="animate-bounce delay-100">●</span>
-                            <span className="animate-bounce delay-200">●</span>
+                            <div className="max-w-3xl mx-auto px-4 md:px-6">
+                                <div className="flex gap-6">
+                                    <div className="w-8 h-8 rounded mt-1 bg-teal-600/20 flex items-center justify-center text-teal-400">
+                                        <Bot size={16} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">Assistant</div>
+                                        <div className="text-teal-400 font-mono text-sm">
+                                            <span className="animate-pulse">▋</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </motion.div>
                     )}
                     <div ref={messagesEndRef} />
                 </div>
-            </div>
+            </main>
 
-            {/* Input Area */}
-            <div className="bg-slate-950/80 backdrop-blur-md pb-4 pt-2">
-                <ChatInput onSend={handleSend} disabled={isTyping} />
-                <div className="text-center text-xs text-slate-600 pb-2">
-                    AI can make mistakes. Please double check important info.
+            {/* Input Area - Fixed at bottom */}
+            <footer className="flex-shrink-0 border-t border-gray-800/30 bg-transparent">
+                <div className="max-w-3xl mx-auto px-4 py-4">
+                    <ChatInput onSend={handleSend} disabled={isTyping} />
+                    <p className="text-center text-xs text-gray-600 mt-3">
+                        AI responses are generated based on portfolio data. Accuracy may vary.
+                    </p>
                 </div>
-            </div>
+            </footer>
         </div>
     );
 };
