@@ -29,9 +29,13 @@ const ChatInterface = () => {
 
         try {
             // Using generic backend call (Groq)
-            const responseText = await sendMessageToBackend(text, messages);
+            const { text: responseText, suggestions } = await sendMessageToBackend(text, messages);
 
-            setMessages(prev => [...prev, { role: 'model', content: responseText }]);
+            setMessages(prev => [...prev, {
+                role: 'model',
+                content: responseText,
+                suggestions: suggestions
+            }]);
 
         } catch (error) {
             console.error("Chat Error:", error);
@@ -64,7 +68,7 @@ const ChatInterface = () => {
             <main className="flex-1 overflow-y-auto">
                 <div className="min-h-full">
                     {messages.map((msg, idx) => (
-                        <MessageBubble key={idx} message={msg} />
+                        <MessageBubble key={idx} message={msg} onSuggestionClick={handleSend} />
                     ))}
 
                     {messages.length === 1 && !isTyping && (

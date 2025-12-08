@@ -4,7 +4,7 @@ const API_URL = "https://portfolio-backend-2-9jbw.onrender.com";
 /**
  * Sends a message to the RAG backend (Groq).
  * @param {string} message - User's message
- * @param {Array} history - Chat history (unused in this backend implementation but kept for compatibility)
+ * @param {Array} history - Chat history 
  * @returns {Promise<string>} - The AI response
  */
 export const sendMessageToBackend = async (message, history = []) => {
@@ -25,7 +25,10 @@ export const sendMessageToBackend = async (message, history = []) => {
         }
 
         const data = await response.json();
-        return data.response;
+        return {
+            text: data.response,
+            suggestions: data.suggestions || []
+        };
 
     } catch (error) {
         console.error("Error sending message:", error);
