@@ -147,20 +147,7 @@ const MessageBubble = ({ message, onSuggestionClick }) => {
                                     </ReactMarkdown>
                                 </div>
 
-                                {/* Suggestions (New) */}
-                                {message.suggestions && message.suggestions.length > 0 && (
-                                    <div className="mt-6 flex flex-wrap gap-2">
-                                        {message.suggestions.map((suggestion, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
-                                                className="px-4 py-2 bg-[#2d2d2d]/80 hover:bg-violet-600/20 hover:text-violet-300 hover:border-violet-500/30 border border-gray-700/50 rounded-xl text-xs text-gray-400 transition-all text-left"
-                                            >
-                                                {suggestion}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
+                                {/* Suggestions Removed */}
                             </>
                         )}
                     </div>
