@@ -1,5 +1,5 @@
 // const API_URL = "http://localhost:8000";
-const API_URL = "https://portfolio-backend-2-9jbw.onrender.com";
+const API_URL = "https://portfolio-backend-yv96.onrender.com";
 
 /**
  * Sends a message to the RAG backend (Groq).
