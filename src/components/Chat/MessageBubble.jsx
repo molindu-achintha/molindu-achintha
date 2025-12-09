@@ -1,14 +1,82 @@
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { User, Bot, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { User, Bot, Copy, Check, ChevronDown, ChevronUp, Brain } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
 
 // Helper to extract images from text
 const extractImages = (text) => {
-    // Matches http/https URLs OR relative paths starting with / ending in image extensions
     const imageRegex = /((https?:\/\/[^\s]+|^\/[^\s]+)\.(jpeg|jpg|png|gif|webp|svg))/gi;
     return text.match(imageRegex) || [];
+};
+
+// Helper to extract and separate thinking content
+const parseThinking = (content) => {
+    const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+    let mainContent = content;
+    let thinkingContent = null;
+
+    if (thinkMatch) {
+        thinkingContent = thinkMatch[1].trim();
+        mainContent = content.replace(/<think>[\s\S]*?<\/think>/, '').trim();
+    }
+
+    // Remove any "📝 Response" or similar prefixes
+    mainContent = mainContent.replace(/^📝\s*Response:?\s*/i, '').trim();
+    mainContent = mainContent.replace(/^Response:?\s*/i, '').trim();
+
+    return { thinking: thinkingContent, main: mainContent };
+};
+
+// Collapsible Thinking Component
+const ThinkingSection = ({ content }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const contentRef = useRef(null);
+
+    useEffect(() => {
+        // Auto-scroll when expanded
+        if (isExpanded && contentRef.current) {
+            const scrollContainer = contentRef.current;
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+    }, [isExpanded, content]);
+
+    return (
+        <div className="mb-4 rounded-lg border border-purple-500/30 bg-purple-900/10 overflow-hidden">
+            <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-purple-900/20 transition-colors"
+            >
+                <Brain size={16} className="text-purple-400" />
+                <span className="text-sm font-medium text-purple-300">Thinking Process</span>
+                <span className="ml-auto text-purple-400">
+                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </span>
+            </button>
+
+            <AnimatePresence>
+                {isExpanded && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                    >
+                        <div
+                            ref={contentRef}
+                            className="px-4 py-3 text-sm text-gray-400 leading-relaxed max-h-[300px] overflow-y-auto border-t border-purple-500/20 bg-gray-900/50"
+                            style={{ scrollBehavior: 'smooth' }}
+                        >
+                            {content.split('\n').map((line, i) => (
+                                <p key={i} className="mb-2 last:mb-0">{line}</p>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
 };
 
 const CodeBlock = ({ children, className }) => {
@@ -23,7 +91,6 @@ const CodeBlock = ({ children, className }) => {
 
     return (
         <div className="relative group my-4 rounded-lg overflow-hidden bg-[#1e1e1e] border border-[#3c3c3c]">
-            {/* VS Code style header */}
             <div className="flex items-center justify-between px-4 py-2 bg-[#2d2d2d] border-b border-[#3c3c3c]">
                 <span className="text-xs text-gray-400 font-mono">{language}</span>
                 <button
@@ -34,7 +101,6 @@ const CodeBlock = ({ children, className }) => {
                     {copied ? 'Copied!' : 'Copy'}
                 </button>
             </div>
-            {/* Code content */}
             <pre className="p-4 overflow-x-auto">
                 <code className="text-sm font-mono text-[#d4d4d4] leading-relaxed">
                     {children}
@@ -46,36 +112,36 @@ const CodeBlock = ({ children, className }) => {
 
 const MessageBubble = ({ message, onSuggestionClick }) => {
     const isUser = message.role === 'user';
-    const images = !isUser ? extractImages(message.content) : [];
+
+    // Parse thinking and main content
+    const { thinking, main } = !isUser ? parseThinking(message.content) : { thinking: null, main: message.content };
+    const images = !isUser ? extractImages(main) : [];
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full py-6 bg-transparent border-b border-gray-800/30"
+            className="w-full py-4 bg-transparent"
         >
             <div className="max-w-3xl mx-auto px-4 md:px-6">
-                <div className="flex gap-6">
-                    {/* Avatar */}
-                    <div className={`flex-shrink-0 w-8 h-8 rounded mt-1 flex items-center justify-center ${isUser
-                        ? 'bg-violet-600/20 text-violet-400'
-                        : 'bg-teal-600/20 text-teal-400'
-                        }`}>
-                        {isUser ? <User size={16} /> : <Bot size={16} />}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0 font-mono text-sm md:text-base">
-                        {/* Role label */}
-                        <div className="text-xs font-bold text-gray-500 mb-1 uppercase tracking-wider">
-                            {isUser ? 'User' : 'Assistant'}
+                <div className={`flex gap-4 ${isUser ? 'justify-end' : 'justify-start'}`}>
+                    {!isUser && (
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg mt-1 bg-teal-600/20 flex items-center justify-center text-teal-400">
+                            <Bot size={16} />
                         </div>
+                    )}
 
+                    <div className={`max-w-[85%] ${isUser ? 'text-right' : 'text-left'}`}>
                         {isUser ? (
-                            <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                            <div className="inline-block bg-violet-600/30 border border-violet-500/30 rounded-2xl rounded-tr-sm px-4 py-3">
+                                <p className="text-gray-100 leading-relaxed whitespace-pre-wrap text-left">{message.content}</p>
+                            </div>
                         ) : (
-                            <>
-                                {/* Render images at the top (Removed Image Restored) */}
+                            <div className="font-mono text-sm md:text-base">
+                                {/* Thinking Section - Collapsible */}
+                                {thinking && <ThinkingSection content={thinking} />}
+
+                                {/* Render images */}
                                 {images.length > 0 && (
                                     <div className="mb-4 flex flex-wrap gap-3">
                                         {images.map((imgUrl, idx) => (
@@ -90,7 +156,25 @@ const MessageBubble = ({ message, onSuggestionClick }) => {
                                     </div>
                                 )}
 
-                                {/* Markdown content (Last One Removed) */}
+                                {/* Render Videos */}
+                                {message.videos && message.videos.length > 0 && (
+                                    <div className="mb-4 flex flex-wrap gap-3">
+                                        {message.videos.map((vidUrl, idx) => (
+                                            <div key={idx} className="rounded-lg overflow-hidden border border-gray-700 shadow-lg max-w-full">
+                                                <video
+                                                    controls
+                                                    className="max-w-full max-h-[300px]"
+                                                    style={{ width: '400px' }}
+                                                >
+                                                    <source src={vidUrl} type="video/mp4" />
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Markdown content */}
                                 <div className="prose prose-invert max-w-none text-gray-100">
                                     <ReactMarkdown
                                         remarkPlugins={[remarkGfm]}
@@ -139,41 +223,36 @@ const MessageBubble = ({ message, onSuggestionClick }) => {
                                             td: ({ children }) => <td className="px-4 py-2 border-b border-gray-700 text-gray-300">{children}</td>,
                                         }}
                                     >
-                                        {/* Filter out markdown images and the Visuals header to avoid duplication */}
-                                        {message.content
-                                            .replace(/!\[.*?\]\(.*?\)/g, "") // Remove image markdown
-                                            .replace(/\*\*Visuals:\*\*\s*$/, "") // Remove likely Visuals string at the end
+                                        {main
+                                            .replace(/!\[.*?\]\(.*?\)/g, "")
+                                            .replace(/\*\*Visuals:\*\*\s*$/, "")
                                         }
                                     </ReactMarkdown>
                                 </div>
 
-                                {/* Suggestions - Premium Card Design */}
+                                {/* Follow-up Suggestions */}
                                 {message.suggestions && message.suggestions.length > 0 && (
-                                    <div className="mt-8 pt-6 border-t border-gray-700/30">
-                                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
-                                            Continue the conversation
-                                        </p>
-                                        <div className="grid gap-2">
-                                            {message.suggestions.map((suggestion, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
-                                                    className="group flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#1a1a2e]/80 to-[#16213e]/80 hover:from-violet-600/20 hover:to-indigo-600/20 border border-gray-700/40 hover:border-violet-500/40 rounded-xl text-sm text-gray-300 hover:text-white transition-all duration-300 text-left"
-                                                >
-                                                    <span className="flex-shrink-0 w-6 h-6 rounded-lg bg-violet-500/20 group-hover:bg-violet-500/30 flex items-center justify-center text-violet-400 text-xs font-medium transition-colors">
-                                                        {idx + 1}
-                                                    </span>
-                                                    <span className="flex-1">{suggestion}</span>
-                                                    <span className="text-gray-600 group-hover:text-violet-400 transition-colors">→</span>
-                                                </button>
-                                            ))}
-                                        </div>
+                                    <div className="mt-6 flex flex-wrap gap-2">
+                                        {message.suggestions.map((suggestion, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => onSuggestionClick && onSuggestionClick(suggestion)}
+                                                className="px-4 py-2 bg-[#2d2d2d]/80 hover:bg-violet-600/20 hover:text-violet-300 hover:border-violet-500/30 border border-gray-700/50 rounded-xl text-xs text-gray-400 transition-all text-left"
+                                            >
+                                                {suggestion}
+                                            </button>
+                                        ))}
                                     </div>
                                 )}
-                            </>
+                            </div>
                         )}
                     </div>
+
+                    {isUser && (
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg mt-1 bg-violet-600/20 flex items-center justify-center text-violet-400">
+                            <User size={16} />
+                        </div>
+                    )}
                 </div>
             </div>
         </motion.div>

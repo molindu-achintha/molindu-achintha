@@ -9,7 +9,7 @@ import { Sparkles, Menu, Bot } from 'lucide-react';
 const ChatInterface = () => {
     // Provider state removed as we now only use Groq
     const [messages, setMessages] = useState([
-        { role: 'model', content: "👋 Hi! I'm **Molindu's AI Assistant**. I can tell you about his projects, technical skills, and experience.\n\nTry asking: \"What projects have you worked on?\"" }
+        { role: 'model', content: "👋 Hi! I'm **Molindu's AI Assistant**. I can tell you about my projects, technical skills, and experience in **Machine Learning** and **Computer Vision**.\n\nTry asking:\n- \"Show me your Computer Vision projects\"\n- \"What deep learning frameworks do you use?\"\n- \"Tell me about your medical imaging work\"" }
     ]);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
@@ -29,12 +29,13 @@ const ChatInterface = () => {
 
         try {
             // Using generic backend call (Groq)
-            const { text: responseText, suggestions } = await sendMessageToBackend(text, messages);
+            const { text: responseText, suggestions, videos } = await sendMessageToBackend(text, messages);
 
             setMessages(prev => [...prev, {
                 role: 'model',
                 content: responseText,
-                suggestions: suggestions
+                suggestions: suggestions,
+                videos: videos // Pass videos to message bubble
             }]);
 
         } catch (error) {
@@ -50,7 +51,7 @@ const ChatInterface = () => {
             {/* Header - Clean and minimal */}
             <header className="flex-shrink-0 border-b border-gray-800/30 bg-transparent sticky top-0 z-50">
                 <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                    <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
                             <Sparkles size={18} className="text-white" />
                         </div>
@@ -58,9 +59,9 @@ const ChatInterface = () => {
                             <h1 className="text-lg font-semibold tracking-tight">
                                 Molindu<span className="text-violet-400">.ai</span>
                             </h1>
-                            <p className="text-xs text-gray-500">Portfolio Assistant (Groq)</p>
+                            <p className="text-xs text-gray-500">Portfolio Assistant</p>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </header>
 
@@ -106,9 +107,6 @@ const ChatInterface = () => {
             <footer className="flex-shrink-0 border-t border-gray-800/30 bg-transparent">
                 <div className="max-w-3xl mx-auto px-4 py-4">
                     <ChatInput onSend={handleSend} disabled={isTyping} />
-                    <p className="text-center text-xs text-gray-600 mt-3">
-                        AI responses are generated based on portfolio data. Accuracy may vary.
-                    </p>
                 </div>
             </footer>
         </div>

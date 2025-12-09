@@ -1,14 +1,20 @@
-// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-const API_URL = "https://portfolio-backend-2-9jbw.onrender.com";
+const API_URL = "http://localhost:8000";
+// const API_URL = "https://portfolio-backend-2-9jbw.onrender.com";
 
 /**
  * Sends a message to the RAG backend (Groq).
  * @param {string} message - User's message
- * @param {Array} history - Chat history 
- * @returns {Promise<string>} - The AI response
+ * @param {Array} history - Chat history for context-aware suggestions
+ * @returns {Promise<object>} - The AI response with text and suggestions
  */
 export const sendMessageToBackend = async (message, history = []) => {
     try {
+        // Format history for backend
+        const formattedHistory = history.map(msg => ({
+            role: msg.role === 'model' ? 'assistant' : msg.role,
+            content: msg.content
+        }));
+
         const response = await fetch(`${API_URL}/chat`, {
             method: "POST",
             headers: {
@@ -16,7 +22,8 @@ export const sendMessageToBackend = async (message, history = []) => {
             },
             body: JSON.stringify({
                 message: message,
-                model_provider: "groq" // Backend defaults to groq anyway
+                model_provider: "groq",
+                history: formattedHistory
             }),
         });
 
@@ -27,7 +34,8 @@ export const sendMessageToBackend = async (message, history = []) => {
         const data = await response.json();
         return {
             text: data.response,
-            suggestions: data.suggestions || []
+            suggestions: data.suggestions || [],
+            videos: data.videos || [] // Capture videos from backend
         };
 
     } catch (error) {
