@@ -4,7 +4,7 @@ import ChatInput from './Chat/ChatInput';
 import SuggestionCards from './Chat/SuggestionCards';
 import { sendMessageToBackend } from '../services/gemini';
 import { motion } from 'framer-motion';
-import { Sparkles, Bot } from 'lucide-react';
+import { Sparkles, Bot, ExternalLink } from 'lucide-react';
 
 const ChatInterface = () => {
     const [messages, setMessages] = useState([
@@ -63,6 +63,22 @@ const ChatInterface = () => {
                     </a>
                 </div>
             </header>
+
+            {/* Quick Access Banner */}
+            <div className="flex-shrink-0 bg-gradient-to-r from-violet-600/10 via-indigo-600/10 to-violet-600/10 border-b border-violet-500/20">
+                <div className="max-w-5xl mx-auto px-3 sm:px-4 py-2">
+                    <a
+                        href="https://molindu-achintha.github.io/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 text-xs sm:text-sm text-violet-300 hover:text-violet-200 transition-colors"
+                    >
+                        <Sparkles size={14} className="text-violet-400" />
+                        <span>For faster view, visit the static portfolio</span>
+                        <ExternalLink size={12} className="text-violet-400" />
+                    </a>
+                </div>
+            </div>
 
             {/* Messages Area - Scrollable */}
             <main className="flex-1 overflow-y-auto overscroll-contain">
